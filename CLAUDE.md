@@ -217,6 +217,45 @@ Comparação via `syncedAt` no app Android (não gerenciado pelo backend):
 
 ---
 
+## Testes
+
+### Estrutura
+
+```
+tests/
+├── unit/
+│   ├── errors/
+│   │   └── GeneralError.test.js
+│   ├── middleware/
+│   │   └── auth.test.js
+│   └── utils/
+│       └── requestsRespose.test.js
+└── integration/
+    └── listas/
+        ├── criar.test.js
+        ├── listarTodas.test.js
+        ├── buscarUma.test.js
+        ├── atualizar.test.js
+        └── deletar.test.js
+```
+
+### Estratégia
+
+- **Unitários** — utilitários, middleware e classes de erro testados isoladamente
+- **Integração** — fluxo completo da lambda até o service; banco mockado
+  - `jest.mock` para o módulo `db` (função exportada diretamente)
+  - `jest.spyOn` para métodos do Mongoose (`save`, `find`, `findOne`, `findOneAndUpdate`, `findOneAndDelete`, `countDocuments`)
+- Estilo `test()` + `expect()`
+- Testes de integração divididos em dois `describe`: `sucesso` e `erros`
+
+### Rodar testes
+
+```bash
+npx jest --no-coverage
+```
+
+---
+
 ## Desenvolvimento Local
 
 - Ambiente via **devcontainer** (VS Code)
