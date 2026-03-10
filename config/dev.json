@@ -1,8 +1,6 @@
 {
   "environment": {
-    "DB": "mongodb://localhost:27017/testeDb"
-  },
-  "config": {
-    "service": "base-lambda-node-project"
+    "DB": "mongodb://mongo:27017/dev",
+    "API_KEY": "chave-dev-local"
   }
 }

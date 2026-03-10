@@ -32,7 +32,7 @@ buildConfigField("String", "API_KEY", '"chave-secreta-aqui"')
 - Protege o endpoint sem adicionar complexidade de tokens JWT, refresh, etc.
 
 ### Backend
-- **AWS Lambda** com Node.js (serverless)
+- **AWS Lambda** com Node.js 20 — **Serverless Framework v3**
 - **AWS API Gateway** expondo os endpoints REST
 - Custo praticamente zero para uso familiar
 
@@ -40,6 +40,15 @@ buildConfigField("String", "API_KEY", '"chave-secreta-aqui"')
 - **MongoDB Atlas** — free tier (500MB)
 - 500MB é mais que suficiente para listas de compras familiares
 - Cluster gratuito, sem custo adicional
+
+### Valores Monetários
+- Todos os valores (`valorEstimado`, `valorCalculado`, `preco`) são armazenados em **centavos** (inteiros)
+- Evita problemas de arredondamento de ponto flutuante
+- O app Android é responsável por converter na exibição
+
+### Valor Calculado
+- `valorCalculado` representa a soma dos preços de todos os itens com preço cadastrado
+- Calculado pelo app Android e enviado no body — o backend apenas armazena
 
 ---
 
@@ -50,7 +59,7 @@ App Android
   └── BuildConfig.FAMILY_ID + API_KEY (header)
         │
         ▼
-  API Gateway ──▶ Lambda (Node.js)
+  API Gateway ──▶ Lambda (Node.js 20)
                       │
                       ▼
                   MongoDB Atlas (free tier)
@@ -64,29 +73,32 @@ Collection: `listas`
 
 ```json
 {
-  "_id": "ObjectId",
+  "_id": "uuid-gerado-pelo-app",
   "familyId": "familia-silva-2024",
   "nome": "Feira da semana",
-  "valorEstimado": 150.00,
-  "criadaEm": "timestamp",
-  "updatedAt": "timestamp",
+  "valorEstimado": 15000,
+  "valorCalculado": 850,
+  "criadaEm": 1741564800000,
+  "updatedAt": 1741564800000,
   "itens": [
     {
       "id": "uuid",
       "nome": "Arroz",
       "quantidade": "2kg",
       "categoria": "OUTROS",
-      "preco": 8.50,
+      "preco": 850,
       "comprado": false,
-      "criadoEm": "timestamp"
+      "criadoEm": 1741564800000
     }
   ]
 }
 ```
 
+- `_id` é um UUID gerado pelo app Android e enviado no body do POST — o backend não gera o `_id`
 - Itens são **embedded** dentro do documento da lista (padrão MongoDB, evita joins)
-- `updatedAt` é atualizado pelo backend a cada PUT
+- `updatedAt` é atualizado automaticamente pelo Mongoose a cada PUT
 - Índice obrigatório: `{ familyId: 1 }` para queries eficientes
+- Valores monetários em centavos (inteiros)
 
 ---
 
@@ -94,35 +106,73 @@ Collection: `listas`
 
 ```
 POST   /listas                       → compartilhar lista (primeira vez)
-GET    /listas                       → pull de todas as listas da família (startup)
-GET    /listas/{remoteId}            → pull de uma lista específica (sync manual)
-PUT    /listas/{remoteId}            → push de mudanças locais (lista + itens embutidos)
-DELETE /listas/{remoteId}            → deletar lista compartilhada
+GET    /listas                       → pull de todas as listas da família (startup) — paginado
+GET    /listas/{id}                  → pull de uma lista específica (sync manual)
+PUT    /listas/{id}                  → push de mudanças locais (lista + itens embutidos)
+DELETE /listas/{id}                  → deletar lista compartilhada
 ```
 
 O `familyId` é extraído do header da requisição e usado para filtrar todos os dados.
 Os itens são sempre enviados embutidos no corpo da lista — não existem endpoints separados para itens.
 
+### Paginação (GET /listas)
+
+Query params opcionais: `page` (default: 0) e `pageSize` (default: 50)
+
+Resposta:
+```json
+{
+  "content": [...],
+  "page": 0,
+  "pageSize": 50,
+  "totalElements": 10
+}
+```
+
 ---
 
 ## Conexão Lambda → MongoDB Atlas
 
-Boa prática para evitar overhead de cold start: reutilizar a conexão fora do handler.
+Padrão de cache com Mongoose para evitar overhead de cold start — implementado em `src/database/db.js`:
 
 ```javascript
-let cachedDb = null;
+const mongoose = require('mongoose');
 
-async function connectDB() {
-  if (cachedDb) return cachedDb;
-  const client = await MongoClient.connect(process.env.MONGO_URI);
-  cachedDb = client.db('nossafeira');
-  return cachedDb;
+let connection = null;
+
+async function db() {
+  if (connection === null) {
+    connection = mongoose.connect(process.env.DB, {
+      serverSelectionTimeoutMS: 5000,
+      connectTimeoutMS: 10000,
+    });
+    await connection;
+  }
+  return connection;
 }
+```
 
-export const handler = async (event) => {
-  const db = await connectDB();
-  // lógica aqui
-};
+O `await db()` é chamado dentro de cada **service** — não na lambda.
+
+---
+
+## Estrutura de Pastas
+
+```
+src/
+├── lambdas/
+│   ├── listas/         ← recebe evento, valida auth, valida body, chama service
+│   └── validators/     ← schemas AJV por operação
+├── services/
+│   └── listas/         ← regras de negócio e queries no MongoDB
+├── models/
+│   └── Lista.js
+├── middleware/
+│   └── auth.js
+├── database/
+│   └── db.js
+├── utils/
+└── errors/
 ```
 
 ---
@@ -153,15 +203,17 @@ export const handler = async (event) => {
 - A conexão ocorre pela **internet pública com TLS** — sem necessidade de VPC
 - Lambda IPs são dinâmicos, portanto o Atlas Network Access deve liberar `0.0.0.0/0`
 - Segurança garantida em duas camadas:
-  1. Credenciais no `MONGO_URI` (usuário/senha do cluster)
+  1. Credenciais no `DB` connection string (usuário/senha do cluster)
   2. API Key no header das requisições (`x-api-key`)
 - Conclusão: **M0 + `0.0.0.0/0` no Network Access** é suficiente para o contexto familiar privado
 
 ---
 
-## Pontos em Aberto
+## Decisões de Implementação
 
-- Estrutura de pastas do projeto Lambda
-- Estratégia de deploy (AWS SAM, Serverless Framework, CDK?)
-- Variáveis de ambiente (MONGO_URI, API keys) e gestão de secrets
-- Tratamento de erros e retries na Lambda
+- **Deploy**: Serverless Framework v3 — já conhecido, suporte nativo a API Gateway + Lambda
+- **Desenvolvimento local**: serverless-offline v13 com `host: 0.0.0.0` para funcionar no devcontainer
+- **Secrets**: `config/{stage}.json` injetados pelo Serverless Framework; `config/prod.json` nunca commitado
+- **Validação de body**: AJV v8 com schemas por operação — erro retorna 400
+- **Erros**: `GeneralError` lançado nos middlewares e services; `catch` da lambda chama `errorResponse`
+- **Paginação**: page baseada em 0 (offset style), pageSize default 50

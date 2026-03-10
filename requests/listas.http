@@ -1,0 +1,82 @@
+@baseUrl = http://localhost:3000/dev
+@apiKey = chave-dev-local
+@familyId = familia-silva-2024
+@listaId = ff15ea57-1e0e-4303-9b48-a0a61d8bbc4a
+
+### Criar lista
+POST {{baseUrl}}/listas
+x-api-key: {{apiKey}}
+x-family-id: {{familyId}}
+Content-Type: application/json
+
+{
+  "_id": "{{listaId}}",
+  "nome": "Feira da semana",
+  "valorEstimado": 15000,
+  "valorCalculado": 850,
+  "criadaEm": 1741564800000,
+  "itens": [
+    {
+      "id": "uuid-item-1",
+      "nome": "Arroz",
+      "quantidade": "2kg",
+      "categoria": "OUTROS",
+      "preco": 850,
+      "comprado": false,
+      "criadoEm": 1741564800000
+    }
+  ]
+}
+
+###
+
+### Listar todas as listas
+GET {{baseUrl}}/listas
+x-api-key: {{apiKey}}
+x-family-id: {{familyId}}
+
+###
+
+### Listar todas as listas com paginação
+GET {{baseUrl}}/listas?page=0&pageSize=10
+x-api-key: {{apiKey}}
+x-family-id: {{familyId}}
+
+###
+
+### Buscar uma lista
+GET {{baseUrl}}/listas/{{listaId}}
+x-api-key: {{apiKey}}
+x-family-id: {{familyId}}
+
+###
+
+### Atualizar lista
+PUT {{baseUrl}}/listas/{{listaId}}
+x-api-key: {{apiKey}}
+x-family-id: {{familyId}}
+Content-Type: application/json
+
+{
+  "nome": "Feira da semana atualizada",
+  "valorEstimado": 20000,
+  "valorCalculado": 850,
+  "itens": [
+    {
+      "id": "uuid-item-1",
+      "nome": "Arroz",
+      "quantidade": "2kg",
+      "categoria": "OUTROS",
+      "preco": 850,
+      "comprado": true,
+      "criadoEm": 1741564800000
+    }
+  ]
+}
+
+###
+
+### Deletar lista
+DELETE {{baseUrl}}/listas/{{listaId}}
+x-api-key: {{apiKey}}
+x-family-id: {{familyId}}

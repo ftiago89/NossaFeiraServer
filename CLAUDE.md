@@ -54,18 +54,19 @@ Collection: `listas`
   "_id": "uuid-gerado-pelo-app",
   "familyId": "familia-silva-2024",
   "nome": "Feira da semana",
-  "valorEstimado": 150.00,
-  "criadaEm": "timestamp",
-  "updatedAt": "timestamp",
+  "valorEstimado": 15000,
+  "valorCalculado": 850,
+  "criadaEm": 1741564800000,
+  "updatedAt": 1741564800000,
   "itens": [
     {
       "id": "uuid",
       "nome": "Arroz",
       "quantidade": "2kg",
       "categoria": "OUTROS",
-      "preco": 8.50,
+      "preco": 850,
       "comprado": false,
-      "criadoEm": "timestamp"
+      "criadoEm": 1741564800000
     }
   ]
 }
@@ -73,8 +74,10 @@ Collection: `listas`
 
 - `_id` é um UUID gerado pelo app Android e enviado no body do POST — o backend não gera o `_id`
 - Índice obrigatório: `{ familyId: 1 }`
-- `updatedAt` é atualizado pelo backend a cada PUT
+- `updatedAt` é atualizado pelo backend a cada PUT via Mongoose `timestamps`
 - Itens são embedded (sem collection separada)
+- **Valores monetários em centavos** (`valorEstimado`, `valorCalculado`, `preco`) — inteiros, sem decimais
+- `valorCalculado` é calculado pelo app e enviado no body — o backend apenas armazena
 
 ---
 
@@ -132,18 +135,15 @@ serverless-dev.yml        ← configuração local com serverless-offline
 As lambdas ficam em `src/lambdas/listas/`, portanto os paths relativos sobem dois níveis (`../../`).
 
 ```javascript
-const db = require('../../database/db');
 const { statusCode } = require('../../utils/constants');
 const { successResponse, errorResponse } = require('../../utils/requestsRespose');
 const { validateAuth } = require('../../middleware/auth');
 
 module.exports.execute = async (event) => {
   try {
-    const auth = validateAuth(event);
-    if (auth.error) return auth.error;
+    const { familyId } = validateAuth(event);
 
-    await db();
-    // lógica aqui
+    // lógica aqui (db() é chamado dentro do service)
     return successResponse(statusCode.OK, { ... });
   } catch (err) {
     console.error('Error => ', err);
@@ -151,6 +151,8 @@ module.exports.execute = async (event) => {
   }
 };
 ```
+
+O `await db()` é responsabilidade do **service**, não da lambda.
 
 ---
 
@@ -200,17 +202,28 @@ Comparação via `syncedAt` no app Android (não gerenciado pelo backend):
 
 ---
 
-## Roteiro de Implementação
+## Status da Implementação
 
-1. `src/utils/constants.js` — adicionar status codes 201, 400, 401, 404
-2. `src/errors/GeneralError.js` — ajustar para os novos status codes
-3. `config/dev.json` — adicionar `API_KEY`
-4. `src/models/Lista.js` — schema Mongoose
-5. `src/middleware/auth.js` — validar `x-api-key` e extrair `x-family-id`
-6. `src/lambdas/validators/listas/criarSchema.js` e `atualizarSchema.js`
-7. Services (`src/services/listas/`) — um por vez, do mais simples ao mais complexo
-8. Lambdas (`src/lambdas/listas/`) + registro no `serverless-dev.yml` — junto, para testar cada rota
-9. `serverless.yml` — registrar funções para produção
+- [x] `src/utils/constants.js` — status codes 200, 201, 400, 401, 404, 500
+- [x] `src/errors/GeneralError.js` — ajustado para os novos status codes
+- [x] `config/dev.json` — `DB` e `API_KEY`
+- [x] `src/models/Lista.js` — schema Mongoose completo
+- [x] `src/middleware/auth.js` — valida `x-api-key` e extrai `x-family-id`
+- [x] `src/lambdas/validators/listas/criarSchema.js` e `atualizarSchema.js`
+- [x] Services (`src/services/listas/`) — todos os 5 implementados
+- [x] Lambdas (`src/lambdas/listas/`) — todas as 5 implementadas
+- [x] `serverless-dev.yml` — todas as rotas registradas e funcionando localmente
+- [ ] `serverless.yml` — registrar funções para deploy em produção
+
+---
+
+## Desenvolvimento Local
+
+- Ambiente via **devcontainer** (VS Code)
+- MongoDB acessível pelo hostname `mongo` (nome do serviço Docker) — não `localhost`
+- serverless-offline configurado com `host: 0.0.0.0` para funcionar com port forwarding do devcontainer
+- Rotas locais com prefixo `/dev` — ex: `http://localhost:3000/dev/listas`
+- Requisições de teste em `requests/listas.http` (extensão REST Client)
 
 ---
 

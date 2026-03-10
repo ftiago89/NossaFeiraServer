@@ -1,10 +1,10 @@
-const { statusDescription } = require('../utils/constants');
+const { statusCode, statusDescription } = require('../utils/constants');
 
 class GeneralError {
   constructor(status, error, errors) {
     this.timestamp = new Date();
     this.status = status;
-    this.statusDescription = statusDescription[status];
+    this.statusDescription = statusDescription[Object.keys(statusCode).find(key => statusCode[key] === status)];
     this.type = 'General Error';
     this.error = error;
     this.errors = errors;
