@@ -213,7 +213,7 @@ Comparação via `syncedAt` no app Android (não gerenciado pelo backend):
 - [x] Services (`src/services/listas/`) — todos os 5 implementados
 - [x] Lambdas (`src/lambdas/listas/`) — todas as 5 implementadas
 - [x] `serverless-dev.yml` — todas as rotas registradas e funcionando localmente
-- [ ] `serverless.yml` — registrar funções para deploy em produção
+- [x] `serverless.yml` — registrar funções para deploy em produção
 
 ---
 

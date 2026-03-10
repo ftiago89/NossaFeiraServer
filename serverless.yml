@@ -14,3 +14,42 @@ provider:
     API_KEY: ${self:custom.environment.API_KEY}
 
 functions:
+  criar:
+    name: ${self:service}-criar
+    handler: src/lambdas/listas/criar.execute
+    events:
+      - http:
+          path: listas
+          method: POST
+
+  listarTodas:
+    name: ${self:service}-listarTodas
+    handler: src/lambdas/listas/listarTodas.execute
+    events:
+      - http:
+          path: listas
+          method: GET
+
+  buscarUma:
+    name: ${self:service}-buscarUma
+    handler: src/lambdas/listas/buscarUma.execute
+    events:
+      - http:
+          path: listas/{id}
+          method: GET
+
+  atualizar:
+    name: ${self:service}-atualizar
+    handler: src/lambdas/listas/atualizar.execute
+    events:
+      - http:
+          path: listas/{id}
+          method: PUT
+
+  deletar:
+    name: ${self:service}-deletar
+    handler: src/lambdas/listas/deletar.execute
+    events:
+      - http:
+          path: listas/{id}
+          method: DELETE
