@@ -1,0 +1,6 @@
+node_modules/
+.serverless/
+config/prod.json
+.DS_Store
+*.log
+.env

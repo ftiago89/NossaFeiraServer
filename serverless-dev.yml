@@ -1,0 +1,21 @@
+service: nossafeira-server
+
+frameworkVersion: '3'
+
+plugins:
+  - serverless-offline
+
+custom:
+  httpPort: 3000
+  lambdaPort: 3001
+  endpoint: http://localhost:3001
+
+provider:
+  name: aws
+  runtime: nodejs20.x
+  stage: dev
+  region: us-east-1
+  memorySize: 256
+  environment: ${file(./config/${self:provider.stage}.json):environment}
+
+functions:

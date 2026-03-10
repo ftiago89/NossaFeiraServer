@@ -1,0 +1,16 @@
+service: nossafeira-server
+
+custom:
+  environment: ${file(./config/${self:provider.stage}.json):environment}
+
+provider:
+  name: aws
+  runtime: nodejs20.x
+  stage: ${opt:stage, "dev"}
+  region: ${opt:region, "us-east-1"}
+  memorySize: 256
+  environment:
+    DB: ${self:custom.environment.DB}
+    API_KEY: ${self:custom.environment.API_KEY}
+
+functions:

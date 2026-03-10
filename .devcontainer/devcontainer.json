@@ -1,0 +1,43 @@
+{
+  "name": "NossaFeiraServer",
+  "dockerComposeFile": "docker-compose.yml",
+  "service": "app",
+  "workspaceFolder": "/workspaces/nossafeiraserver",
+  "remoteUser": "node",
+  "forwardPorts": [
+    3000,
+    27017,
+    54545
+  ],
+  "portsAttributes": {
+    "3000": { "label": "App / serverless-offline" },
+    "27017": { "label": "MongoDB" },
+    "54545": { "label": "Claude Code OAuth" }
+  },
+  "containerEnv": {
+    "MONGODB_URI": "mongodb://mongo:27017/dev",
+    "CLAUDE_CONFIG_DIR": "/home/node/.claude"
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "anthropic.claude-code",
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode",
+        "eamodio.gitlens",
+        "mongodb.mongodb-vscode",
+        "humao.rest-client"
+      ],
+      "settings": {
+        "terminal.integrated.defaultProfile.linux": "zsh",
+        "terminal.integrated.profiles.linux": {
+          "zsh": { "path": "zsh" },
+          "bash": { "path": "bash", "icon": "terminal-bash" }
+        },
+        "editor.formatOnSave": true,
+        "editor.defaultFormatter": "esbenp.prettier-vscode",
+        "editor.tabSize": 2
+      }
+    }
+  }
+}

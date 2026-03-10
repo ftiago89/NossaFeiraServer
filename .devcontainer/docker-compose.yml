@@ -1,0 +1,40 @@
+version: "3.8"
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - ..:/workspaces/nossafeiraserver:cached
+      - serverless-node-modules:/workspaces/nossafeiraserver/node_modules
+      - serverless-claude-config:/home/node/.claude
+      - serverless-history:/commandhistory
+    environment:
+      - MONGODB_URI=mongodb://mongo:27017/dev
+    depends_on:
+      - mongo
+    networks:
+      - serverless-net
+    command: sleep infinity
+
+  mongo:
+    image: mongo:7
+    ports:
+      - "27017:27017"
+    environment:
+      - MONGO_INITDB_DATABASE=dev
+    volumes:
+      - mongo-data:/data/db
+    networks:
+      - serverless-net
+
+volumes:
+  serverless-node-modules:
+  serverless-claude-config:
+  serverless-history:
+  mongo-data:
+
+networks:
+  serverless-net:
+    driver: bridge

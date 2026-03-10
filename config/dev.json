@@ -1,0 +1,8 @@
+{
+  "environment": {
+    "DB": "mongodb://localhost:27017/testeDb"
+  },
+  "config": {
+    "service": "base-lambda-node-project"
+  }
+}
