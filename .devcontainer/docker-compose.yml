@@ -5,6 +5,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+    ports:
+      - "127.0.0.1:3000:3000"
     volumes:
       - ..:/workspaces/nossafeiraserver:cached
       - serverless-node-modules:/workspaces/nossafeiraserver/node_modules
