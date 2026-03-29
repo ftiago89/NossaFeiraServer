@@ -11,8 +11,8 @@ Distribuição do app: instalação manual via Android Studio — sem publicaç�
 
 ## Stack
 
-- **Serverless Framework v3** + **serverless-offline v13** (desenvolvimento local)
-- **Node.js 20** (CommonJS — `require`/`module.exports`)
+- **oss-serverless (osls) v3** — fork open-source do Serverless Framework v3 + **serverless-offline v13** (desenvolvimento local)
+- **Node.js 24** (CommonJS — `require`/`module.exports`)
 - **AWS Lambda** + **API Gateway**
 - **MongoDB Atlas** free tier (collection `listas`, itens embedded)
 - **Mongoose v9** para modelagem e conexão com o banco
@@ -272,6 +272,17 @@ npx jest --no-coverage
 # Rodar local
 npm run dev
 
-# Deploy
-serverless deploy --stage prod
+# Rodar testes
+npm test
+
+# Deploy produção
+npm run deploy
 ```
+
+---
+
+## Produção
+
+- **URL base:** `https://nyl2g209f4.execute-api.us-east-1.amazonaws.com/prod`
+- Região: `us-east-1`
+- Credenciais AWS configuradas em `~/.aws/credentials` (perfil `default`)

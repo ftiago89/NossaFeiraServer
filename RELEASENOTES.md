@@ -1,5 +1,18 @@
 # Release Notes — NossaFeira Server
 
+## v1.1.0 — 2026-03-29
+
+### Migração osls + Node.js 24
+
+#### Mudanças
+
+- **Migração para osls** — substituição do Serverless Framework pelo fork open-source oss-serverless (osls)
+- **Runtime Node.js 24** — atualização do runtime Lambda de `nodejs20.x` para `nodejs24.x`
+- **Script de deploy** — adicionado `npm run deploy` para deploy em produção
+- **Primeiro deploy em produção** — API disponível em `https://nyl2g209f4.execute-api.us-east-1.amazonaws.com/prod`
+
+---
+
 ## v1.0.0 — 2026-03-12
 
 ### Lançamento inicial
